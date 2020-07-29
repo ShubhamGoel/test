@@ -21,7 +21,7 @@ pg_hook = PostgresHook(postgres_conn_id='cloudsql')
 
 # replace 'table' with a valid table in your DB
 def test_query():
-    q = 'SELECT * FROM table;'
+    q = 'SELECT * FROM leads;'
     results = pg_hook.get_records(q)
     print(results[:5])
 
