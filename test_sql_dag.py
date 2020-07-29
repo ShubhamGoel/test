@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 default_args = {
     'owner': 'owner',
     'depends_on_past': False,
+    'schedule": "* * * * *',
     'start_date': datetime(2020, 3, 3),
     'email': ['owner@gmail.com'],
     'email_on_failure': False,
