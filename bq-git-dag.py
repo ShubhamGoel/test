@@ -10,7 +10,7 @@ default_args = {
     'depends_on_past': True,
     #'start_date': seven_days_ago,
     'start_date': datetime(2017, 6, 1),
-    'email': ['airflow@airflow.com'],
+    'email': ['shubham.goel@mediaagility.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 5,
@@ -26,10 +26,10 @@ dag = DAG('bigquery_github_trends_v1', default_args=default_args, schedule_inter
 
 # Create new tables in cli before running DAG
 
-# bq mk --time_partitioning_type=DAY my-project:github_trends.github_daily_metrics
-# bq mk --time_partitioning_type=DAY my-project:github_trends.github_agg
-# bq mk --time_partitioning_type=DAY my-project:github_trends.hackernews_agg
-# bq mk --time_partitioning_type=DAY my-project:github_trends.hackernews_github_agg
+# bq mk --time_partitioning_type=DAY bark-service-u1kc:github_trends.github_daily_metrics
+# bq mk --time_partitioning_type=DAY bark-service-u1kc:github_trends.github_agg
+# bq mk --time_partitioning_type=DAY bark-service-u1kc:github_trends.hackernews_agg
+# bq mk --time_partitioning_type=DAY bark-service-u1kc:github_trends.hackernews_github_agg
 
 
 ## Task 1
@@ -92,7 +92,7 @@ t3 = BigQueryOperator(
       date,
       repo
     ''',
-    destination_dataset_table='my-project.github_trends.github_daily_metrics${{ yesterday_ds_nodash }}',
+    destination_dataset_table='bark-service-u1kc.github_trends.github_daily_metrics${{ yesterday_ds_nodash }}',
     dag=dag)
 
 
@@ -124,14 +124,14 @@ t4 = BigQueryOperator(
         AND TIMESTAMP("{{ yesterday_ds }}") , 
         forks, null)) as forks_last_1_day
     FROM
-      `my-project.github_trends.github_daily_metrics`
+      `bark-service-u1kc.github_trends.github_daily_metrics`
     WHERE _PARTITIONTIME BETWEEN TIMESTAMP("{{ macros.ds_add(ds, -27) }}") 
     AND TIMESTAMP("{{ yesterday_ds }}") 
     GROUP BY
       date,
       repo
     ''',
-    destination_dataset_table='my-project.github_trends.github_agg${{ yesterday_ds_nodash }}',
+    destination_dataset_table='bark-service-u1kc.github_trends.github_agg${{ yesterday_ds_nodash }}',
     dag=dag)
 
 # Task 5
@@ -164,7 +164,7 @@ t5 = BigQueryOperator(
       story_id,
       url
     ''',
-    destination_dataset_table='my-project.github_trends.hackernews_agg${{ yesterday_ds_nodash }}',
+    destination_dataset_table='bark-service-u1kc.github_trends.hackernews_agg${{ yesterday_ds_nodash }}',
     dag=dag)
 
 # Task 6
@@ -193,7 +193,7 @@ t6 = BigQueryOperator(
     (SELECT
       *
     FROM
-      `my-project.github_trends.hackernews_agg`
+      `bark-service-u1kc.github_trends.hackernews_agg`
       WHERE _PARTITIONTIME BETWEEN TIMESTAMP("{{ yesterday_ds }}") AND TIMESTAMP("{{ yesterday_ds }}")
       )as a
     LEFT JOIN 
@@ -208,12 +208,12 @@ t6 = BigQueryOperator(
       forks_last_7_days,
       forks_last_1_day
       FROM
-      `my-project.github_trends.github_agg`
+      `bark-service-u1kc.github_trends.github_agg`
       WHERE _PARTITIONTIME BETWEEN TIMESTAMP("{{ yesterday_ds }}") AND TIMESTAMP("{{ yesterday_ds }}")
       ) as b
     ON a.url = b.url
     ''',
-    destination_dataset_table='my-project.github_trends.hackernews_github_agg${{ yesterday_ds_nodash }}',
+    destination_dataset_table='bark-service-u1kc.github_trends.hackernews_github_agg${{ yesterday_ds_nodash }}',
     dag=dag)
 
 # Task 7
@@ -226,7 +226,7 @@ t7 = BigQueryCheckOperator(
     SELECT
     partition_id
     FROM
-    [my-project:github_trends.hackernews_github_agg$__PARTITIONS_SUMMARY__]
+    [bark-service-u1kc:github_trends.hackernews_github_agg$__PARTITIONS_SUMMARY__]
     WHERE partition_id = "{{ yesterday_ds_nodash }}"
     ''',
     dag=dag)
